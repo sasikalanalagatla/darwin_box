@@ -2,6 +2,7 @@ package com.hrms.darwinBox.service.impl;
 
 import com.hrms.darwinBox.enums.EmployeeStatus;
 import com.hrms.darwinBox.enums.RoleType;
+import com.hrms.darwinBox.exception.ForbiddenException;
 import com.hrms.darwinBox.model.Employee;
 import com.hrms.darwinBox.repository.EmployeeRepository;
 import com.hrms.darwinBox.model.EmployeeRole;
@@ -108,13 +109,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee updateEmployee(String employeeCode, Employee updatedEmployee, Long actorId) {
 
-        // ensure actor exists
         var actorOpt = employeeRepository.findById(actorId);
         if (actorOpt.isEmpty()) {
-            throw new com.hrms.darwinBox.exception.ResourceNotFoundException("Actor not found");
+            throw new ResourceNotFoundException("Actor not found");
         }
 
-        // check actor roles by joining employeeRole -> role
         boolean isAdmin = false;
         boolean isHr = false;
         var actorRoles = employeeRoleRepository.findByEmployeeId(actorId);
@@ -129,14 +128,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         if (!isAdmin && !isHr) {
-            throw new com.hrms.darwinBox.exception.ForbiddenException("Only ADMIN or HR can edit employee details");
+            throw new ForbiddenException("Only ADMIN or HR can edit employee details");
         }
 
         Employee existingEmployee = employeeRepository
                 .findByEmployeeCode(employeeCode)
-                .orElseThrow(() -> new com.hrms.darwinBox.exception.ResourceNotFoundException("Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-        // copy only fields provided in request (partial update)
         if (updatedEmployee.getFullName() != null) {
             existingEmployee.setFullName(updatedEmployee.getFullName());
         }
@@ -171,5 +169,27 @@ public class EmployeeServiceImpl implements EmployeeService {
                 "Employee details updated");
 
         return savedEmployee;
+    }
+
+    @Override
+    public String deleteEmployee(String employeeCode, Long id) {
+        Employee employee = employeeRepository.findByEmployeeCode(employeeCode).get();
+        boolean isAdmin = false;
+        boolean isHr = false;
+        var actorRoles = employeeRoleRepository.findByEmployeeId(id);
+        for (var er : actorRoles) {
+            var role = roleRepository.findById(er.getRoleId()).orElse(null);
+            if (role != null) {
+                if (role.getName() == RoleType.ADMIN)
+                    isAdmin = true;
+                if (role.getName() == RoleType.HR)
+                    isHr = true;
+            }
+        }
+        if (!isAdmin && !isHr) {
+            throw new ForbiddenException("Only ADMIN or HR can edit employee details");
+        }
+        employeeRepository.delete(employee);
+        return "employee deleted successfully";
     }
 }

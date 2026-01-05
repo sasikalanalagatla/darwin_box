@@ -38,4 +38,17 @@ public class EmployeeController {
         Employee updated = employeeService.updateEmployee(employeeCode, employee, actorId);
         return ResponseEntity.ok(updated);
     }
+
+    @DeleteMapping("/delete/{employeeCode}")
+    public ResponseEntity<String> deleteEmployee(
+            @PathVariable String employeeCode,
+            @RequestParam Long id
+    ) {
+        try {
+            String res = employeeService.deleteEmployee(employeeCode, id);
+            return ResponseEntity.ok(res);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
