@@ -104,4 +104,72 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employee not found with code: " + employeeCode));
     }
+
+    @Override
+    public Employee updateEmployee(String employeeCode, Employee updatedEmployee, Long actorId) {
+
+        // ensure actor exists
+        var actorOpt = employeeRepository.findById(actorId);
+        if (actorOpt.isEmpty()) {
+            throw new com.hrms.darwinBox.exception.ResourceNotFoundException("Actor not found");
+        }
+
+        // check actor roles by joining employeeRole -> role
+        boolean isAdmin = false;
+        boolean isHr = false;
+        var actorRoles = employeeRoleRepository.findByEmployeeId(actorId);
+        for (var er : actorRoles) {
+            var role = roleRepository.findById(er.getRoleId()).orElse(null);
+            if (role != null) {
+                if (role.getName() == RoleType.ADMIN)
+                    isAdmin = true;
+                if (role.getName() == RoleType.HR)
+                    isHr = true;
+            }
+        }
+
+        if (!isAdmin && !isHr) {
+            throw new com.hrms.darwinBox.exception.ForbiddenException("Only ADMIN or HR can edit employee details");
+        }
+
+        Employee existingEmployee = employeeRepository
+                .findByEmployeeCode(employeeCode)
+                .orElseThrow(() -> new com.hrms.darwinBox.exception.ResourceNotFoundException("Employee not found"));
+
+        // copy only fields provided in request (partial update)
+        if (updatedEmployee.getFullName() != null) {
+            existingEmployee.setFullName(updatedEmployee.getFullName());
+        }
+        if (updatedEmployee.getDesignation() != null) {
+            existingEmployee.setDesignation(updatedEmployee.getDesignation());
+        }
+        if (updatedEmployee.getDepartment() != null) {
+            existingEmployee.setDepartment(updatedEmployee.getDepartment());
+        }
+        if (updatedEmployee.getManagerId() != null) {
+            existingEmployee.setManagerId(updatedEmployee.getManagerId());
+        }
+        if (updatedEmployee.getBaseMonthlySalary() != null) {
+            existingEmployee.setBaseMonthlySalary(updatedEmployee.getBaseMonthlySalary());
+        }
+        if (updatedEmployee.getStatus() != null) {
+            existingEmployee.setStatus(updatedEmployee.getStatus());
+        }
+        if (updatedEmployee.getJoiningDate() != null) {
+            existingEmployee.setJoiningDate(updatedEmployee.getJoiningDate());
+        }
+
+        existingEmployee.setUpdatedAt(LocalDateTime.now());
+
+        Employee savedEmployee = employeeRepository.save(existingEmployee);
+
+        auditService.log(
+                "Employee",
+                savedEmployee.getId(),
+                "UPDATED",
+                actorId,
+                "Employee details updated");
+
+        return savedEmployee;
+    }
 }

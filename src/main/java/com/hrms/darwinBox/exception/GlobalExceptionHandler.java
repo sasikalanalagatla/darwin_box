@@ -38,6 +38,17 @@ public class GlobalExceptionHandler {
                 .body(body);
     }
 
+    @ExceptionHandler(com.hrms.darwinBox.exception.ForbiddenException.class)
+    public ResponseEntity<Object> handleForbidden(com.hrms.darwinBox.exception.ForbiddenException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 403);
+        body.put("message", ex.getMessage() == null ? "Forbidden" : ex.getMessage());
+        body.put("timestamp", java.time.OffsetDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .header("Content-Type", "application/json")
+                .body(body);
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
