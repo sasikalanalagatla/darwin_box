@@ -27,6 +27,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    @ExceptionHandler(com.hrms.darwinBox.exception.ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleNotFound(com.hrms.darwinBox.exception.ResourceNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 404);
+        body.put("message", ex.getMessage() == null ? "Resource not found" : ex.getMessage());
+        body.put("timestamp", java.time.OffsetDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .header("Content-Type", "application/json")
+                .body(body);
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -51,9 +62,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Object> handleRuntime(RuntimeException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("error", ex.getMessage());
+        body.put("status", 400);
+        body.put("message", ex.getMessage() == null ? "Bad request" : ex.getMessage());
+        body.put("timestamp", java.time.OffsetDateTime.now().toString());
         log.warn("Runtime exception: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .header("Content-Type", "application/json")
+                .body(body);
     }
 
     @ExceptionHandler(Exception.class)

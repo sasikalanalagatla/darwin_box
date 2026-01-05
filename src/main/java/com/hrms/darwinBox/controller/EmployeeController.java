@@ -22,4 +22,10 @@ public class EmployeeController {
         Employee savedEmployee = employeeService.saveEmployee(employee, id, role);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedEmployee);
     }
+
+    @GetMapping("/")
+    public ResponseEntity<Employee> getEmployeeByCode(@RequestParam String employeeCode) {
+        Employee employee = employeeService.getEmployeeByCode(employeeCode);
+        return ResponseEntity.ok(employee);
+    }
 }

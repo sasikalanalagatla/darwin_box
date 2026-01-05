@@ -10,6 +10,7 @@ import com.hrms.darwinBox.repository.EmployeeRoleRepository;
 import com.hrms.darwinBox.repository.RoleRepository;
 import com.hrms.darwinBox.service.AuditService;
 import com.hrms.darwinBox.service.EmployeeService;
+import com.hrms.darwinBox.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,12 +40,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         if (employee.getManagerId() != null &&
                 employeeRepository.findById(employee.getManagerId()).isEmpty()) {
-            throw new RuntimeException("Manager not found!");
+            throw new ResourceNotFoundException("Manager not found");
         }
         // permission checks: creator must exist and have proper role
         var creatorOpt = employeeRepository.findById(creatorId);
         if (creatorOpt.isEmpty()) {
-            throw new RuntimeException("Creator not found");
+            throw new ResourceNotFoundException("Creator not found");
         }
 
         var creatorRoles = employeeRoleRepository.findByEmployeeId(creatorId);
@@ -95,5 +96,12 @@ public class EmployeeServiceImpl implements EmployeeService {
                 "New employee added");
 
         return savedEmployee;
+    }
+
+    @Override
+    public Employee getEmployeeByCode(String employeeCode) {
+        return employeeRepository.findByEmployeeCode(employeeCode)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Employee not found with code: " + employeeCode));
     }
 }
