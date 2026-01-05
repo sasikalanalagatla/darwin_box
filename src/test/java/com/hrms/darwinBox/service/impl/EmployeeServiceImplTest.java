@@ -50,7 +50,10 @@ class EmployeeServiceImplTest {
         adminRole.setId(10L);
         adminRole.setName(RoleType.ADMIN);
         when(roleRepository.findById(10L)).thenReturn(Optional.of(adminRole));
-        when(employeeRoleRepository.findByEmployeeId(1L)).thenReturn(List.of(new EmployeeRole(1L, 10L)));
+        com.hrms.darwinBox.model.Employee creatorEmp = new com.hrms.darwinBox.model.Employee();
+        creatorEmp.setId(1L);
+        when(employeeRoleRepository.findByEmployee_Id(1L))
+                .thenReturn(List.of(new com.hrms.darwinBox.model.EmployeeRole(creatorEmp, adminRole)));
 
         Role hrRole = new Role();
         hrRole.setId(20L);
@@ -70,7 +73,7 @@ class EmployeeServiceImplTest {
             return e;
         });
 
-        when(employeeRoleRepository.existsByEmployeeIdAndRoleId(2L, 20L)).thenReturn(false);
+        when(employeeRoleRepository.existsByEmployee_IdAndRole_Id(2L, 20L)).thenReturn(false);
 
         var saved = service.saveEmployee(newEmp, 1L, RoleType.HR);
         assertNotNull(saved);
@@ -86,7 +89,7 @@ class EmployeeServiceImplTest {
 
         when(employeeRepository.findById(5L)).thenReturn(Optional.of(creator));
         // creator has no roles
-        when(employeeRoleRepository.findByEmployeeId(5L)).thenReturn(List.of());
+        when(employeeRoleRepository.findByEmployee_Id(5L)).thenReturn(List.of());
 
         Employee newEmp = new Employee();
         newEmp.setEmployeeCode("HR101");
@@ -109,7 +112,10 @@ class EmployeeServiceImplTest {
         hrRole.setId(30L);
         hrRole.setName(RoleType.HR);
         when(roleRepository.findById(30L)).thenReturn(Optional.of(hrRole));
-        when(employeeRoleRepository.findByEmployeeId(11L)).thenReturn(List.of(new EmployeeRole(11L, 30L)));
+        com.hrms.darwinBox.model.Employee hrEmp = new com.hrms.darwinBox.model.Employee();
+        hrEmp.setId(11L);
+        when(employeeRoleRepository.findByEmployee_Id(11L))
+                .thenReturn(List.of(new com.hrms.darwinBox.model.EmployeeRole(hrEmp, hrRole)));
 
         Role empRole = new Role();
         empRole.setId(40L);

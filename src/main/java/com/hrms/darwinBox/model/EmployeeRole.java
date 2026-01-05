@@ -3,7 +3,6 @@ package com.hrms.darwinBox.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Entity
 @Table(name = "employee_roles")
@@ -15,14 +14,19 @@ public class EmployeeRole {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long employeeId;
-    private Long roleId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "employee_id", referencedColumnName = "id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false)
+    private Role role;
 
     public EmployeeRole() {
     }
 
-    public EmployeeRole(Long employeeId, Long roleId) {
-        this.employeeId = employeeId;
-        this.roleId = roleId;
+    public EmployeeRole(Employee employee, Role role) {
+        this.employee = employee;
+        this.role = role;
     }
 }

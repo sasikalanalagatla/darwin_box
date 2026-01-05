@@ -8,6 +8,5 @@ import java.util.List;
 @Repository
 public interface EmployeeRoleRepository extends JpaRepository<EmployeeRole, Long> {
     List<EmployeeRole> findByEmployeeId(Long employeeId);
-
     boolean existsByEmployeeIdAndRoleId(Long employeeId, Long roleId);
 }

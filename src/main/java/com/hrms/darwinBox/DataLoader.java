@@ -64,7 +64,7 @@ public class DataLoader implements CommandLineRunner {
 
             Role adminRole = roleRepository.findByName(RoleType.ADMIN)
                     .orElseThrow(() -> new RuntimeException("ADMIN role not found after seeding"));
-            employeeRoleRepository.save(new EmployeeRole(savedAdmin.getId(), adminRole.getId()));
+            employeeRoleRepository.save(new EmployeeRole(savedAdmin, adminRole));
 
             auditService.log(
                     "Employee",

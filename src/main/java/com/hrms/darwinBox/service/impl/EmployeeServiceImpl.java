@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -44,16 +46,16 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new ResourceNotFoundException("Manager not found");
         }
         // permission checks: creator must exist and have proper role
-        var creatorOpt = employeeRepository.findById(creatorId);
+        Optional<Employee> creatorOpt = employeeRepository.findById(creatorId);
         if (creatorOpt.isEmpty()) {
             throw new ResourceNotFoundException("Creator not found");
         }
 
-        var creatorRoles = employeeRoleRepository.findByEmployeeId(creatorId);
+        List<EmployeeRole> creatorRoles = employeeRoleRepository.findByEmployeeId(creatorId);
         boolean creatorIsAdmin = false;
         boolean creatorIsHr = false;
         for (EmployeeRole er : creatorRoles) {
-            Role r = roleRepository.findById(er.getRoleId()).orElse(null);
+            Role r = er.getRole();
             if (r != null) {
                 if (r.getName() == RoleType.ADMIN)
                     creatorIsAdmin = true;
@@ -86,7 +88,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Role targetRole = roleRepository.findByName(role)
                 .orElseThrow(() -> new RuntimeException("Target role not found"));
         if (!employeeRoleRepository.existsByEmployeeIdAndRoleId(savedEmployee.getId(), targetRole.getId())) {
-            employeeRoleRepository.save(new EmployeeRole(savedEmployee.getId(), targetRole.getId()));
+            employeeRoleRepository.save(new EmployeeRole(savedEmployee, targetRole));
         }
 
         auditService.log(
@@ -109,16 +111,16 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee updateEmployee(String employeeCode, Employee updatedEmployee, Long actorId) {
 
-        var actorOpt = employeeRepository.findById(actorId);
+        Optional<Employee> actorOpt = employeeRepository.findById(actorId);
         if (actorOpt.isEmpty()) {
             throw new ResourceNotFoundException("Actor not found");
         }
 
         boolean isAdmin = false;
         boolean isHr = false;
-        var actorRoles = employeeRoleRepository.findByEmployeeId(actorId);
-        for (var er : actorRoles) {
-            var role = roleRepository.findById(er.getRoleId()).orElse(null);
+        List<EmployeeRole> actorRoles = employeeRoleRepository.findByEmployeeId(actorId);
+        for (EmployeeRole er : actorRoles) {
+            Role role = er.getRole();
             if (role != null) {
                 if (role.getName() == RoleType.ADMIN)
                     isAdmin = true;
@@ -176,9 +178,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findByEmployeeCode(employeeCode).get();
         boolean isAdmin = false;
         boolean isHr = false;
-        var actorRoles = employeeRoleRepository.findByEmployeeId(id);
-        for (var er : actorRoles) {
-            var role = roleRepository.findById(er.getRoleId()).orElse(null);
+        List<EmployeeRole> actorRoles = employeeRoleRepository.findByEmployeeId(id);
+        for (EmployeeRole er : actorRoles) {
+            Role role = er.getRole();
             if (role != null) {
                 if (role.getName() == RoleType.ADMIN)
                     isAdmin = true;
