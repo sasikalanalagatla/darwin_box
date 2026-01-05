@@ -24,4 +24,19 @@ public class AuditServiceImpl implements AuditService {
 
         auditLogRepository.save(log);
     }
+
+    @Override
+    public void log(Long employeeId, String action, String description) {
+        AuditLog auditLog = new AuditLog();
+        auditLog.setEntityName("Attendance");
+        auditLog.setEntityId(employeeId);
+        auditLog.setAction(action);
+        // For system actions performed by scheduler, mark performedBy as the employee
+        // id
+        // so NOT NULL constraint is satisfied. This represents an automated action.
+        auditLog.setPerformedBy(employeeId);
+        auditLog.setRemarks(description);
+
+        auditLogRepository.save(auditLog);
+    }
 }
