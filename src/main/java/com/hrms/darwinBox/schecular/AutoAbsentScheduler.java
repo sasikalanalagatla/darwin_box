@@ -10,6 +10,8 @@ import com.hrms.darwinBox.enums.LeaveStatus;
 import com.hrms.darwinBox.repository.EmployeeRepository;
 import com.hrms.darwinBox.service.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,11 +26,13 @@ public class AutoAbsentScheduler {
     private final AttendanceRepository attendanceRepository;
     private final LeaveRequestRepository leaveRequestRepository;
     private final AuditService auditLogService;
+    private static final Logger logger = LoggerFactory.getLogger(AutoAbsentScheduler.class);
 
     @Scheduled(cron = "0 59 23 * * ?")
     //@Scheduled(cron = "0 * * * * ?")
     public void autoMarkAbsent() {
 
+        logger.info("scheduler started for auto absent");
         LocalDate today = LocalDate.now();
 
         List<Employee> activeEmployees = employeeRepository.findByStatus(EmployeeStatus.ACTIVE);
@@ -63,6 +67,7 @@ public class AutoAbsentScheduler {
                         employee.getId(),
                         "Employee auto-marked ABSENT (no check-in, no leave)");
             }
+
         }
     }
 }

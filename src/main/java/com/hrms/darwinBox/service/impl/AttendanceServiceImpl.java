@@ -68,33 +68,27 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         LocalDate today = LocalDate.now();
 
-        // 1️⃣ Find today's attendance
         Attendance attendance = attendanceRepository
                 .findByEmployeeIdAndDate(employeeId, today)
                 .orElseThrow(() -> new RuntimeException("No check-in found for today"));
 
-        // 2️⃣ Prevent double checkout
         if (attendance.getPunchOutTime() != null) {
             throw new RuntimeException("Already checked out");
         }
 
-        // 3️⃣ Punch out
         LocalTime punchOut = LocalTime.now();
         attendance.setPunchOutTime(punchOut);
 
-        // 4️⃣ Calculate working hours
         long workedMinutes = java.time.Duration
                 .between(attendance.getPunchInTime(), punchOut)
                 .toMinutes();
 
-        // 5️⃣ Set final status
-        if (workedMinutes < 240) { // 4 hours
+        if (workedMinutes < 240) {
             attendance.setStatus(AttendanceStatus.HALF_DAY);
         }
 
         Attendance saved = attendanceRepository.save(attendance);
 
-        // 6️⃣ Audit
         auditService.log(
                 "Attendance",
                 saved.getId(),
